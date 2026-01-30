@@ -1,6 +1,12 @@
---// Structure taken from https://github.com/shlexware/Sirius/blob/request/library/sense/source.lua (they have like the most optimized structure) | Elements have been rewritten --\\
+-- // Setup Custom Font \\ --
+if not isfile("ARCADECLASSIC.TTF") then
+    writefile("ARCADECLASSIC.TTF", game:HttpGet("https://raw.githubusercontent.com/bobwgawg-ai/arcadce/main/ARCADECLASSIC.TTF"))
+end
 
--- Services
+local ARCADE_FONT_PATH = getcustomasset("ARCADECLASSIC.TTF")
+-- We use a fallback index (2) in case the executor doesn't support Font objects in Drawing
+local CUSTOM_ARCADE = ARCADE_FONT_PATH
+
 local run_service = game:GetService("RunService");
 local players = game:GetService("Players");
 local workspace = game:GetService("Workspace");
@@ -70,16 +76,27 @@ function esp_object.new(player, interface)
 end
 
 function esp_object:_create(class, properties)
-	local drawing = Drawing.new(class);
+    local drawing = Drawing.new(class)
 
-	for property, value in properties do
-		pcall(function()
-			drawing[property] = value;
-		end)
-	end
+    for property, value in pairs(properties) do
+        -- Special handling for our custom font
+        if property == "Font" and class == "Text" then
+            -- Try to apply the custom asset, fallback to 2 (Plex) if it fails
+            local success = pcall(function()
+                drawing.Font = value
+            end)
+            if not success then
+                drawing.Font = 2
+            end
+        else
+            pcall(function()
+                drawing[property] = value
+            end)
+        end
+    end
 
-	self.bin[#self.bin + 1] = drawing;
-	return drawing;
+    self.bin[#self.bin + 1] = drawing
+    return drawing
 end
 
 function esp_object:Construct()
@@ -135,10 +152,10 @@ function esp_object:Construct()
 			healthbar_outline = self:_create("Line", { Thickness = 3, Visible = false}),
 			health_bar = self:_create("Line", { Thickness = 1.5, Visible = false}),
 
-			health_visual_text = self:_create("Text", { Text = "", Font = 2, Size = 13, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			name_text = self:_create("Text", { Text = "", Font = 2, Size = 13, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			weapon_text = self:_create("Text", { Text = "", Font = 2, Size = 13, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			distance_text = self:_create("Text", { Text = "", Font = 2, Size = 13, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			health_visual_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 16, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			name_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 16, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			weapon_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 16, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			distance_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 16, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
 			
 			head_dot_outline = self:_create("Circle", { Thickness = 3, Visible = false, Color = Color3.fromRGB(0, 0, 0), Filled = false}),
 			head_dot = self:_create("Circle", { Thickness = 1, Visible = false, Color = Color3.fromRGB(255, 255, 255), Filled = false}),
