@@ -145,11 +145,11 @@ function esp_object:Construct()
         		bottom_right_horizontal = self:_create("Line", { Thickness = 1, Visible = false, Color = Color3.fromRGB(255, 255, 255) }),
 			},
 
-			box_outline = self:_create("Square", { Thickness = 3, Visible = false, Filled = false}),
+			box_outline = self:_create("Square", { Thickness = 4, Visible = false, Filled = false}),
 			box = self:_create("Square", { Thickness = 2, Visible = false, Filled = false}),
 			box_fill = self:_create("Square", { Thickness = 1, Visible = false, Filled = true}),
 
-			healthbar_outline = self:_create("Line", { Thickness = 3, Visible = false}),
+			healthbar_outline = self:_create("Line", { Thickness = 4, Visible = false}),
 			health_bar = self:_create("Line", { Thickness = 2.5, Visible = false}),
 
 			health_visual_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 14, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
