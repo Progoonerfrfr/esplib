@@ -146,16 +146,16 @@ function esp_object:Construct()
 			},
 
 			box_outline = self:_create("Square", { Thickness = 3, Visible = false, Filled = false}),
-			box = self:_create("Square", { Thickness = 1, Visible = false, Filled = false}),
+			box = self:_create("Square", { Thickness = 2, Visible = false, Filled = false}),
 			box_fill = self:_create("Square", { Thickness = 1, Visible = false, Filled = true}),
 
 			healthbar_outline = self:_create("Line", { Thickness = 3, Visible = false}),
-			health_bar = self:_create("Line", { Thickness = 1.5, Visible = false}),
+			health_bar = self:_create("Line", { Thickness = 2.5, Visible = false}),
 
-			health_visual_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 18, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			name_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 18, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			weapon_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 18, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
-			distance_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 18, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			health_visual_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 14, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			name_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 14, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			weapon_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 14, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
+			distance_text = self:_create("Text", { Text = "", Font = CUSTOM_ARCADE, Size = 14, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Visible = false }),
 			
 			head_dot_outline = self:_create("Circle", { Thickness = 3, Visible = false, Color = Color3.fromRGB(0, 0, 0), Filled = false}),
 			head_dot = self:_create("Circle", { Thickness = 1, Visible = false, Color = Color3.fromRGB(255, 255, 255), Filled = false}),
