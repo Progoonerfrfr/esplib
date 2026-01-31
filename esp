@@ -30,7 +30,10 @@ end
 -- Locals
 local floor = math.floor;
 local vector2_new = Vector2.new;
-local round = math.round;
+-- FIX: Polyfill math.round in case executor doesn't have it
+local round = math.round or function(n)
+    return floor(n + 0.5)
+end
 local clear = table.clear;
 local find = table.find;
 
@@ -39,13 +42,16 @@ local find_first_child = workspace.FindFirstChild;
 local find_first_child_of_class = workspace.FindFirstChildOfClass;
 local ray_cast = workspace.Raycast;
 local lerp_color = Color3.new().Lerp;
-local lerp2 = Vector2.zero.Lerp;
+-- FIX: Safe lerp function instead of Vector2.zero:Lerp
+local function lerp2(a, b, t)
+    return a + (b - a) * t
+end
 
 -- Constants
 local CORNER_BOXES_BOTTOM_OFFSET = vector2_new(0, 1);
 local HEALTH_BAR_OFFSET = vector2_new(4, 0);
 local HEALTH_BAR_OUTLINE_OFFSET = vector2_new(0, 1);
-local VISIBILITY_CACHE_TIME = 0.1; -- Cache visibility for 0.1 seconds
+local VISIBILITY_CACHE_TIME = 0.1;
 
 -- Skeleton connections
 local SKELETON_CONNECTIONS = {
@@ -94,14 +100,12 @@ function esp_object:_create(class, properties)
     end)
 
     if not drawing_ok or not drawing then
-        warn("[ESP Library] Failed to create drawing: " .. tostring(class))
         return nil
     end
 
     for property, value in pairs(properties) do
         -- Special handling for our custom font
         if property == "Font" and class == "Text" then
-            -- Try to apply the custom asset, fallback to 2 (Plex) if it fails
             local success = pcall(function()
                 drawing.Font = value
             end)
@@ -221,12 +225,10 @@ end
 function esp_object:CheckVisibility()
     local current_time = tick();
     
-    -- Use cached result if still valid
     if current_time - self.visibility_cache.last_check < VISIBILITY_CACHE_TIME then
         return self.visibility_cache.is_visible;
     end
     
-    -- Perform new visibility check
     local is_visible = false;
     if self.character and self.character:FindFirstChild("HumanoidRootPart") then
         local root_pos = self.character.HumanoidRootPart.Position;
@@ -243,7 +245,6 @@ function esp_object:CheckVisibility()
         end
     end
     
-    -- Update cache
     self.visibility_cache.is_visible = is_visible;
     self.visibility_cache.last_check = current_time;
     
@@ -307,14 +308,12 @@ function esp_object:Update()
             top_right = vector2_new(bottom_right.X, top_left.Y)
         };
         
-        -- Head position for head dot
         if head then
             local head_pos, head_on_screen = world_to_screen(head.Position);
             self.head_position = head_pos;
             self.head_on_screen = head_on_screen;
         end
     else
-        -- Calculate off-screen indicator position
         if humanoid_root_part then
             local viewport_size = camera.ViewportSize;
             local center = vector2_new(viewport_size.X / 2, viewport_size.Y / 2);
@@ -322,7 +321,6 @@ function esp_object:Update()
             local direction = (screen_position - center).Unit;
             local angle = math.atan2(direction.Y, direction.X);
             
-            -- Position arrow at edge of screen
             local edge_distance = math.min(viewport_size.X, viewport_size.Y) * 0.45;
             local arrow_pos = center + direction * edge_distance;
             
@@ -347,7 +345,6 @@ function esp_object:Render()
     do
         local box_type = options.box_type or "box";
         
-        -- Box
         do
             if visible.box then visible.box.Visible = vis and options.box_type == "box"; end
             if visible.box_outline then visible.box_outline.Visible = (visible.box and visible.box.Visible); end
@@ -378,7 +375,6 @@ function esp_object:Render()
             end
         end
 
-        -- Corner
         do
             local box_corners = visible.box_corners;
 
@@ -402,7 +398,6 @@ function esp_object:Render()
                 local bottom_left_position = vector2_new(floor(position.X - width), floor(position.Y + height)) - CORNER_BOXES_BOTTOM_OFFSET;
                 local bottom_right_position = vector2_new(floor(position.X + width), floor(position.Y + height)) - CORNER_BOXES_BOTTOM_OFFSET;
             
-                -- Elements
                 if box_corners.top_left_vertical then
                     box_corners.top_left_vertical.From = top_left_position;
                     box_corners.top_left_vertical.To = vector2_new(top_left_position.X, top_left_position.Y + corner_length);
@@ -443,7 +438,6 @@ function esp_object:Render()
                     box_corners.bottom_right_horizontal.To = vector2_new(bottom_right_position.X - corner_length, bottom_right_position.Y);
                 end
             
-                -- Outline
                 do
                     if box_corners.top_right_vertical_outline then
                         box_corners.top_right_vertical_outline.From = vector2_new(box_corners.top_right_vertical.From.X, box_corners.top_right_vertical.From.Y - 1.2);
@@ -512,14 +506,13 @@ function esp_object:Render()
             end
         end
 
-        -- Health Text
         do
             local health_text = visible.health_visual_text;
             if health_text then
                 health_text.Visible = (enabled and on_screen) and options.health_text and health_bar.Visible;
 
                 if (health_text.Visible) then
-                    health_text.Text = math.floor(self.health + 0.5);
+                    health_text.Text = floor(self.health + 0.5);
                     health_text.Color = options.health_text_color;
 
                     health_text.Position = health_bar.From + Vector2.new(-13, -3);
@@ -563,7 +556,7 @@ function esp_object:Render()
             distance.Visible = (enabled and on_screen) and options.distance_text;
 
             if (distance.Visible) then
-                distance.Text = math.floor(self.distance) .. "s";
+                distance.Text = floor(self.distance) .. "s";
                 distance.Color = options.distance_text_color;
                 
                 local y_offset = options.weapon_text and 17 or 2;
@@ -648,7 +641,6 @@ function esp_object:Render()
                 local arrow_size = 15;
                 local angle = self.offscreen_arrow_rotation;
                 
-                -- Calculate triangle points
                 local tip = self.offscreen_arrow_position;
                 local base_left = tip + vector2_new(
                     math.cos(angle + 2.5) * arrow_size,
@@ -675,10 +667,8 @@ function esp_object:Render()
             if self.highlight.Enabled then
                 self.highlight.Adornee = self.character;
                 
-                -- Use cached visibility check
                 local is_visible = self:CheckVisibility();
                 
-                -- Set colors based on visibility
                 if is_visible then
                     self.highlight.FillColor = options.chams_visible_color;
                 else
@@ -703,81 +693,63 @@ local esp = {
     team_settings = {
         enemy = {
             enabled = false,
-
             box = false,
-            box_type = "box", -- corner & box
+            box_type = "box",
             box_fill = false,
-
             weapon_text = false,
             health_text = false,
             name_text = false,
             distance_text = false,
-
             health_bar = false,
             dynamic_color = false,
-
             chams = false,
             head_dot = false,
             skeleton = false,
             offscreen_arrow = false,
-
             box_color = Color3.fromRGB(255, 255, 255),
             box_fill_color = Color3.fromRGB(255, 255, 255),
             box_fill_transparency = 0.5,
             weapon_text_color = Color3.fromRGB(255, 255, 255),
             name_text_color = Color3.fromRGB(255, 255, 255),
             distance_text_color = Color3.fromRGB(255, 255, 255),
-
             health_text_color = Color3.fromRGB(255, 255, 255),
             health_bar_color = Color3.fromRGB(255, 255, 255),
-
             chams_visible_color = Color3.fromRGB(0, 255, 0),
             chams_occluded_color = Color3.fromRGB(255, 0, 0),
-
             head_dot_color = Color3.fromRGB(255, 255, 255),
             skeleton_color = Color3.fromRGB(255, 255, 255),
             offscreen_arrow_color = Color3.fromRGB(255, 255, 255),
-
             dying_color = Color3.fromRGB(255, 0, 0),
             healthy_color = Color3.fromRGB(0, 255, 0),
         },
         friendly = {
             enabled = false,
-
             box = false,
-            box_type = "box", -- corner & box
+            box_type = "box",
             box_fill = false,
-
             weapon_text = false,
             health_text = false,
             name_text = false,
             distance_text = false,
-
             health_bar = false,
             dynamic_color = false,
-
             chams = false,
             head_dot = false,
             skeleton = false,
             offscreen_arrow = false,
-
             box_color = Color3.fromRGB(255, 255, 255),
             box_fill_color = Color3.fromRGB(255, 255, 255),
             box_fill_transparency = 0.5,
             weapon_text_color = Color3.fromRGB(255, 255, 255),
             name_text_color = Color3.fromRGB(255, 255, 255),
             distance_text_color = Color3.fromRGB(255, 255, 255),
-
             health_text_color = Color3.fromRGB(255, 255, 255),
             health_bar_color = Color3.fromRGB(255, 255, 255),
-
             chams_visible_color = Color3.fromRGB(0, 255, 0),
             chams_occluded_color = Color3.fromRGB(255, 0, 0),
-
             head_dot_color = Color3.fromRGB(255, 255, 255),
             skeleton_color = Color3.fromRGB(255, 255, 255),
             offscreen_arrow_color = Color3.fromRGB(255, 255, 255),
-
             dying_color = Color3.fromRGB(255, 0, 0),
             healthy_color = Color3.fromRGB(0, 255, 0),
         },
